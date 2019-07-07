@@ -180,8 +180,10 @@ void gpgpusim_cuda_launchDeviceV2(const ptx_instruction * pI, ptx_thread_info * 
 	    
 	    //PDOM analysis is done for Parent kernel but not for child kernel.
 	    if (device_kernel_entry->is_pdom_set()) {
+            if(g_ptx_sim_detail)
 		    printf("GPGPU-Sim PTX: PDOM analysis already done for %s \n", device_kernel_entry->get_name().c_str() );
 	    } else {
+            if(g_ptx_sim_detail)
 		    printf("GPGPU-Sim PTX: finding reconvergence points for \'%s\'...\n", device_kernel_entry->get_name().c_str() );
 		    /*
 		     * Some of the instructions like printf() gives the gpgpusim the wrong impression that it is a function call.

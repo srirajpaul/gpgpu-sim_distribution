@@ -186,6 +186,7 @@ symbol_table *gpgpu_ptx_sim_load_ptx_from_string( const char *p, unsigned source
     if ( g_debug_execution >= 100 ) 
        print_ptx_file(p,source_num,buf);
 
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: finished parsing EMBEDDED .ptx file %s\n",buf);
     return symtab;
 }
@@ -193,6 +194,7 @@ symbol_table *gpgpu_ptx_sim_load_ptx_from_string( const char *p, unsigned source
 symbol_table *gpgpu_ptx_sim_load_ptx_from_filename( const char *filename )
 {
     symbol_table *symtab=init_parser(filename);
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: finished parsing EMBEDDED .ptx file %s\n",filename);
     return symtab;
 }
@@ -323,6 +325,7 @@ char* get_app_binary_name(){
    }
 #endif
    self_exe_path = strtok(self_exe_path, ".");
+   if(g_ptx_sim_detail)
    printf("self exe links to: %s\n", self_exe_path);
    return self_exe_path;
 }

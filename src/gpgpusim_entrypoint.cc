@@ -95,6 +95,7 @@ bool break_limit = false;
 
 static void termination_callback()
 {
+    printf("\n");
     printf("GPGPU-Sim: *** exit detected ***\n");
     fflush(stdout);
 }
@@ -229,8 +230,10 @@ gpgpu_sim *gpgpu_ptx_sim_init_perf()
    g_the_gpu_config.reg_options(opp); // register GPU microrachitecture options
 
    option_parser_cmdline(opp, sg_argc, sg_argv); // parse configuration options
+   if(g_ptx_sim_detail) {
    fprintf(stdout, "GPGPU-Sim: Configuration options:\n\n");
    option_parser_print(opp, stdout);
+   }
    // Set the Numeric locale to a standard locale where a decimal point is a "dot" not a "comma"
    // so it does the parsing correctly independent of the system environment variables
    assert(setlocale(LC_NUMERIC,"C"));

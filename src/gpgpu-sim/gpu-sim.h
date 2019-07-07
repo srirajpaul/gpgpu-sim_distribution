@@ -63,6 +63,7 @@
 #define DUMPLOG 333
 
 extern tr1_hash_map<new_addr_type,unsigned> address_random_interleaving;
+extern int g_ptx_sim_detail;
 
 
 enum dram_ctrl_t {
@@ -184,8 +185,10 @@ struct memory_config {
          option_parser_register(dram_opp, "RTPL",   OPT_UINT32, &tRTPL,  "read to precharge delay between accesses to different bank groups", "0"); 
 
          option_parser_delimited_string(dram_opp, gpgpu_dram_timing_opt, "=:;"); 
+         if(g_ptx_sim_detail) {
          fprintf(stdout, "DRAM Timing Options:\n"); 
          option_parser_print(dram_opp, stdout); 
+         }
          option_parser_destroy(dram_opp); 
       }
 
@@ -212,6 +215,7 @@ struct memory_config {
       assert( (nbk % m_n_sub_partition_per_memory_channel == 0) 
               && "Number of DRAM banks must be a perfect multiple of memory sub partition"); 
       m_n_mem_sub_partition = m_n_mem * m_n_sub_partition_per_memory_channel; 
+      if(g_ptx_sim_detail)
       fprintf(stdout, "Total number of memory sub partition = %u\n", m_n_mem_sub_partition); 
 
       m_address_mapping.init(m_n_mem, m_n_sub_partition_per_memory_channel);

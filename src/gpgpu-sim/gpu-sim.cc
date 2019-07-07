@@ -761,6 +761,7 @@ gpgpu_sim::gpgpu_sim( const gpgpu_sim_config &config )
     icnt_create(m_shader_config->n_simt_clusters,m_memory_config->m_n_mem_sub_partition);
 
     time_vector_create(NUM_MEM_REQ_STAT);
+    if(g_ptx_sim_detail)
     fprintf(stdout, "GPGPU-Sim uArch: performance model initialization complete.\n");
 
     m_running_kernels.resize( config.max_concurrent_kernel, NULL );
@@ -843,8 +844,10 @@ void gpgpu_sim_config::init_clock_domains(void )
    icnt_period = 1/icnt_freq;
    dram_period = 1/dram_freq;
    l2_period = 1/l2_freq;
+   if(g_ptx_sim_detail) {
    printf("GPGPU-Sim uArch: clock freqs: %lf:%lf:%lf:%lf\n",core_freq,icnt_freq,l2_freq,dram_freq);
    printf("GPGPU-Sim uArch: clock periods: %.20lf:%.20lf:%.20lf:%.20lf\n",core_period,icnt_period,l2_period,dram_period);
+   }
 }
 
 void gpgpu_sim::reinit_clock_domains(void)

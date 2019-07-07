@@ -34,6 +34,7 @@
 #include <map>
 using namespace std;
 
+extern int g_ptx_sim_detail;
 
 // Do not use #include since it will not compile in icnt_wrapper or change the makefile to make it
 class Flit;

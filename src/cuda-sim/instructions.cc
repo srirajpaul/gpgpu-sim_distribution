@@ -2054,8 +2054,10 @@ void call_impl( const ptx_instruction *pI, ptx_thread_info *thread )
    const symbol *func_addr = target.get_symbol();
    function_info *target_func = func_addr->get_pc();
    if (target_func->is_pdom_set()) {
+      if(g_ptx_sim_detail)
       printf("GPGPU-Sim PTX: PDOM analysis already done for %s \n", target_func->get_name().c_str() );
    } else {
+      if(g_ptx_sim_detail)
       printf("GPGPU-Sim PTX: finding reconvergence points for \'%s\'...\n", target_func->get_name().c_str() );
       /*
        * Some of the instructions like printf() gives the gpgpusim the wrong impression that it is a function call.
