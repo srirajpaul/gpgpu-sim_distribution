@@ -230,7 +230,12 @@ class OptionParser {
           exit(1);
         }
 
-        ParseFile(argv[i + 1]);
+        char *tmp_str = getenv("GPGPUSIM_ARCH_PATH");
+        string configFile;
+        if(tmp_str != nullptr)
+            configFile += tmp_str;
+        configFile += argv[i + 1];
+        ParseFile( configFile.c_str() );
         i += 1;
         optionFound = true;
       }

@@ -162,9 +162,14 @@ void icnt_reg_options(class OptionParser* opp) {
 
 void icnt_wrapper_init() {
   switch (g_network_mode) {
-    case INTERSIM:
+    case INTERSIM: {
       // FIXME: delete the object: may add icnt_done wrapper
-      g_icnt_interface = InterconnectInterface::New(g_network_config_filename);
+      char *tmp_str = getenv("GPGPUSIM_ARCH_PATH");
+      string icntFile;
+      if(tmp_str != nullptr)
+          icntFile += tmp_str;
+      icntFile += g_network_config_filename;
+      g_icnt_interface = InterconnectInterface::New(icntFile.c_str());
       icnt_create = intersim2_create;
       icnt_init = intersim2_init;
       icnt_has_buffer = intersim2_has_buffer;
@@ -177,6 +182,7 @@ void icnt_wrapper_init() {
       icnt_display_state = intersim2_display_state;
       icnt_get_flit_size = intersim2_get_flit_size;
       break;
+    }
     case LOCAL_XBAR:
       g_localicnt_interface = LocalInterconnect::New(g_inct_config);
       icnt_create = LocalInterconnect_create;
