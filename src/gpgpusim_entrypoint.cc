@@ -68,6 +68,7 @@ void *gpgpu_sim_thread_sequential(void *ctx_ptr) {
 }
 
 static void termination_callback() {
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim: *** exit detected ***\n");
   fflush(stdout);
 }
@@ -187,11 +188,15 @@ void gpgpu_context::synchronize() {
 
 void gpgpu_context::exit_simulation() {
   the_gpgpusim->g_sim_done = true;
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim: exit_simulation called\n");
   fflush(stdout);
+  }
   sem_wait(&(the_gpgpusim->g_sim_signal_exit));
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim: simulation thread signaled exit\n");
   fflush(stdout);
+  }
 }
 
 gpgpu_sim *gpgpu_context::gpgpu_ptx_sim_init_perf() {
@@ -210,8 +215,10 @@ gpgpu_sim *gpgpu_context::gpgpu_ptx_sim_init_perf() {
       opp);  // register GPU microrachitecture options
 
   option_parser_cmdline(opp, sg_argc, sg_argv);  // parse configuration options
+  if(g_ptx_sim_detail) {
   fprintf(stdout, "GPGPU-Sim: Configuration options:\n\n");
   option_parser_print(opp, stdout);
+  }
   // Set the Numeric locale to a standard locale where a decimal point is a
   // "dot" not a "comma" so it does the parsing correctly independent of the
   // system environment variables

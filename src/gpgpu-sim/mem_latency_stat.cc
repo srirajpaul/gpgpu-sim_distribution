@@ -108,6 +108,7 @@ memory_stats_t::memory_stats_t(unsigned n_shader,
                       // mf_num_lat_pw to obtain average latency Per Window
   mf_total_lat = 0;
   num_mfs = 0;
+  if(g_ptx_sim_detail)
   printf("*** Initializing Memory Statistics ***\n");
   totalbankreads =
       (unsigned int **)calloc(mem_config->m_n_mem, sizeof(unsigned int *));

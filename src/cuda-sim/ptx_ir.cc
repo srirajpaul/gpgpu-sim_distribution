@@ -626,6 +626,7 @@ void function_info::do_pdom() {
     print_postdominators();
     print_ipostdominators();
   }
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: pre-decoding instructions for \'%s\'...\n",
          m_name.c_str());
   for (unsigned ii = 0; ii < m_n;
@@ -633,9 +634,11 @@ void function_info::do_pdom() {
     ptx_instruction *pI = m_instr_mem[ii];
     pI->pre_decode();
   }
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: ... done pre-decoding instructions for \'%s\'.\n",
          m_name.c_str());
   fflush(stdout);
+  }
   m_assembled = true;
 }
 void intersect(std::set<int> &A, const std::set<int> &B) {
@@ -669,8 +672,10 @@ void print_set(const std::set<int> &A) {
 void function_info::find_dominators() {
   // find dominators using algorithm of Muchnick's Adv. Compiler Design &
   // Implemmntation Fig 7.14
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: Finding dominators for \'%s\'...\n", m_name.c_str());
   fflush(stdout);
+  }
   assert(m_basic_blocks.size() >= 2);  // must have a distinquished entry block
   std::vector<basic_block_t *>::iterator bb_itr = m_basic_blocks.begin();
   (*bb_itr)->dominator_ids.insert(
@@ -709,9 +714,11 @@ void function_info::find_dominators() {
 void function_info::find_postdominators() {
   // find postdominators using algorithm of Muchnick's Adv. Compiler Design &
   // Implemmntation Fig 7.14
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: Finding postdominators for \'%s\'...\n",
          m_name.c_str());
   fflush(stdout);
+  }
   assert(m_basic_blocks.size() >= 2);  // must have a distinquished exit block
   std::vector<basic_block_t *>::reverse_iterator bb_itr =
       m_basic_blocks.rbegin();
@@ -746,9 +753,11 @@ void function_info::find_postdominators() {
 void function_info::find_ipostdominators() {
   // find immediate postdominator blocks, using algorithm of
   // Muchnick's Adv. Compiler Design & Implemmntation Fig 7.15
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: Finding immediate postdominators for \'%s\'...\n",
          m_name.c_str());
   fflush(stdout);
+  }
   assert(m_basic_blocks.size() >= 2);  // must have a distinquished exit block
   for (unsigned i = 0; i < m_basic_blocks.size();
        i++) {  // initialize Tmp(n) to all pdoms of n except for n
@@ -797,9 +806,11 @@ void function_info::find_ipostdominators() {
 void function_info::find_idominators() {
   // find immediate dominator blocks, using algorithm of
   // Muchnick's Adv. Compiler Design & Implemmntation Fig 7.15
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: Finding immediate dominators for \'%s\'...\n",
          m_name.c_str());
   fflush(stdout);
+  }
   assert(m_basic_blocks.size() >= 2);  // must have a distinquished entry block
   for (unsigned i = 0; i < m_basic_blocks.size();
        i++) {  // initialize Tmp(n) to all doms of n except for n
@@ -1155,6 +1166,7 @@ static std::list<operand_info> check_operands(
       for (o = operands.begin(); o != operands.end(); o++) {
         const operand_info &op = *o;
         if (op.is_literal()) {
+          if(g_ptx_sim_detail)
           printf(
               "GPGPU-Sim PTX: PTX uses two scalar type intruction with literal "
               "operand.\n");

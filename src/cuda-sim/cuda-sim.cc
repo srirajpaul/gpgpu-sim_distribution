@@ -201,9 +201,11 @@ void gpgpu_t::gpgpu_ptx_sim_bindTextureToArray(
   unsigned int Tx, Ty;
   int r;
 
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX:   texel size = %d\n", texel_size);
   printf("GPGPU-Sim PTX:   texture cache linesize = %d\n",
          m_function_model_config.get_texcache_linesize());
+  }
   // first determine base Tx size for given linesize
   switch (m_function_model_config.get_texcache_linesize()) {
     case 16:
@@ -237,6 +239,7 @@ void gpgpu_t::gpgpu_ptx_sim_bindTextureToArray(
   // by now, got the correct Tx size, calculate correct Ty size
   Ty = m_function_model_config.get_texcache_linesize() / (Tx * texel_size);
 
+  if(g_ptx_sim_detail) {
   printf(
       "GPGPU-Sim PTX:   Tx = %d; Ty = %d, Tx_numbits = %d, Ty_numbits = %d\n",
       Tx, Ty, intLOGB2(Tx), intLOGB2(Ty));
@@ -246,6 +249,7 @@ void gpgpu_t::gpgpu_ptx_sim_bindTextureToArray(
       "GPGPU-Sim PTX:   Binding texture to array starting at devPtr32 = 0x%x\n",
       array->devPtr32);
   printf("GPGPU-Sim PTX:   Texel size = %d bytes\n", texel_size);
+  }
   struct textureInfo *texInfo =
       (struct textureInfo *)malloc(sizeof(struct textureInfo));
   texInfo->Tx = Tx;
@@ -277,9 +281,11 @@ void function_info::ptx_assemble() {
   m_instr_mem_size = MAX_INST_SIZE * (num_inst + 1);
   m_instr_mem = new ptx_instruction *[m_instr_mem_size];
 
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: instruction assembly for function \'%s\'... ",
          m_name.c_str());
   fflush(stdout);
+  }
   std::list<ptx_instruction *>::iterator i;
 
   addr_t PC =
@@ -338,8 +344,10 @@ void function_info::ptx_assemble() {
     }
   }
   m_n = n;
+  if(g_ptx_sim_detail) {
   printf("  done.\n");
   fflush(stdout);
+  }
 
   // disable pdom analysis  here and do it at runtime
 #if 0
@@ -1302,12 +1310,14 @@ void function_info::add_param_data(unsigned argn,
         abort();
       }
       unsigned num_bits = 8 * args->m_nbytes;
+      if(g_ptx_sim_detail) {
       printf(
           "GPGPU-Sim PTX: deferred allocation of shared region for \"%s\" from "
           "0x%x to 0x%x (shared memory space)\n",
           p->name().c_str(), m_symtab->get_shared_next(),
           m_symtab->get_shared_next() + num_bits / 8);
       fflush(stdout);
+      }
       assert((num_bits % 8) == 0);
       addr_t addr = m_symtab->get_shared_next();
       addr_t addr_pad =
@@ -1983,11 +1993,13 @@ unsigned ptx_sim_init_thread(kernel_info_t &kernel,
     if (g_debug_execution == -1) {
       dim3 ctaid = thd->get_ctaid();
       dim3 t = thd->get_tid();
+      if(g_ptx_sim_detail) {
       printf(
           "GPGPU-Sim PTX simulator:  thread exiting ctaid=(%u,%u,%u) "
           "tid=(%u,%u,%u) uid=%u\n",
           ctaid.x, ctaid.y, ctaid.z, t.x, t.y, t.z, thd->get_uid());
       fflush(stdout);
+      }
     }
     thd->m_cta_info->register_deleted_thread(thd);
     delete thd;
@@ -2166,6 +2178,7 @@ void print_splash() {
 void cuda_sim::gpgpu_ptx_sim_register_const_variable(void *hostVar,
                                                      const char *deviceName,
                                                      size_t size) {
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX registering constant %s (%zu bytes) to name mapping\n",
          deviceName, size);
   g_const_name_lookup[hostVar] = deviceName;
@@ -2174,6 +2187,7 @@ void cuda_sim::gpgpu_ptx_sim_register_const_variable(void *hostVar,
 void cuda_sim::gpgpu_ptx_sim_register_global_variable(void *hostVar,
                                                       const char *deviceName,
                                                       size_t size) {
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX registering global %s hostVar to name mapping\n",
          deviceName);
   g_global_name_lookup[hostVar] = deviceName;
@@ -2182,6 +2196,7 @@ void cuda_sim::gpgpu_ptx_sim_register_global_variable(void *hostVar,
 void cuda_sim::gpgpu_ptx_sim_memcpy_symbol(const char *hostVar, const void *src,
                                            size_t count, size_t offset, int to,
                                            gpgpu_t *gpu) {
+  if(g_ptx_sim_detail)
   printf(
       "GPGPU-Sim PTX: starting gpgpu_ptx_sim_memcpy_symbol with hostVar 0x%p\n",
       hostVar);
@@ -2253,6 +2268,7 @@ void cuda_sim::gpgpu_ptx_sim_memcpy_symbol(const char *hostVar, const void *src,
     default:
       abort();
   }
+  if(g_ptx_sim_detail)
   printf(
       "GPGPU-Sim PTX: gpgpu_ptx_sim_memcpy_symbol: copying %s memory %zu bytes "
       "%s symbol %s+%zu @0x%x ...\n",
@@ -2266,6 +2282,8 @@ void cuda_sim::gpgpu_ptx_sim_memcpy_symbol(const char *hostVar, const void *src,
   fflush(stdout);
 }
 
+int g_ptx_sim_detail = 0; // if 0 do not print config and other details
+
 extern int ptx_debug;
 
 void cuda_sim::read_sim_environment_variables() {
@@ -2275,10 +2293,16 @@ void cuda_sim::read_sim_environment_variables() {
 
   char *mode = getenv("PTX_SIM_MODE_FUNC");
   if (mode) sscanf(mode, "%u", &g_ptx_sim_mode);
+  char *mode_detail = getenv("PTX_SIM_MODE_DETAIL");
+  if( mode_detail )
+     sscanf(mode_detail,"%u", &g_ptx_sim_detail);
+  else
+     g_ptx_sim_detail = 1;
+
   printf(
-      "GPGPU-Sim PTX: simulation mode %d (can change with PTX_SIM_MODE_FUNC "
+      "GPGPU-Sim PTX: simulation mode %d detail %d (can change with PTX_SIM_MODE_FUNC "
       "environment variable:\n",
-      g_ptx_sim_mode);
+      g_ptx_sim_mode, g_ptx_sim_detail);
   printf(
       "               1=functional simulation only, 0=detailed performance "
       "simulator)\n");
@@ -2355,6 +2379,7 @@ unsigned max_cta(const struct gpgpu_ptx_sim_info *kernel_info,
   if (kernel_info->regs > 0)
     result_regs = gpgpu_shader_registers /
                   (padded_cta_size * ((kernel_info->regs + 3) & ~3));
+  if(g_ptx_sim_detail)
   printf("padded cta size is %d and %d and %d", padded_cta_size,
          kernel_info->regs, ((kernel_info->regs + 3) & ~3));
   // Limit by CTA
@@ -2365,12 +2390,14 @@ unsigned max_cta(const struct gpgpu_ptx_sim_info *kernel_info,
   result = gs_min2(result, result_regs);
   result = gs_min2(result, result_cta);
 
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim uArch: CTA/core = %u, limited by:", result);
   if (result == result_thread) printf(" threads");
   if (result == result_shmem) printf(" shmem");
   if (result == result_regs) printf(" regs");
   if (result == result_cta) printf(" cta_limit");
   printf("\n");
+  }
 
   return result;
 }
@@ -2396,9 +2423,11 @@ void cuda_sim::gpgpu_cuda_ptx_sim_main_func(kernel_info_t &kernel,
   g_checkpoint = new checkpoint();
 
   if (kernel_func_info->is_pdom_set()) {
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: PDOM analysis already done for %s \n",
            kernel.name().c_str());
   } else {
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: finding reconvergence points for \'%s\'...\n",
            kernel.name().c_str());
     kernel_func_info->do_pdom();
@@ -2416,6 +2445,7 @@ void cuda_sim::gpgpu_cuda_ptx_sim_main_func(kernel_info_t &kernel,
           ->gpgpu_shader_registers,
       gpgpu_ctx->the_gpgpusim->g_the_gpu->getShaderCoreConfig()
           ->max_cta_per_core);
+  if(g_ptx_sim_detail)
   printf("Max CTA : %d\n", max_cta_tot);
 
   int cp_op = gpgpu_ctx->the_gpgpusim->g_the_gpu->checkpoint_option;
@@ -2498,6 +2528,7 @@ void cuda_sim::gpgpu_cuda_ptx_sim_main_func(kernel_info_t &kernel,
       (unsigned)elapsed_time);
   printf("gpgpu_simulation_rate = %u (inst/sec)\n",
          (unsigned)(g_ptx_sim_num_insn / elapsed_time));
+  printf("\n");
   fflush(stdout);
 }
 
@@ -2665,10 +2696,12 @@ const char *get_ptxinfo_kname() { return g_ptxinfo_kname; }
 
 void print_ptxinfo() {
   if (!get_ptxinfo_kname()) {
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: Binary info : gmem=%u, cmem=%u\n", g_ptxinfo.gmem,
            g_ptxinfo.cmem);
   }
   if (get_ptxinfo_kname()) {
+    if(g_ptx_sim_detail)
     printf(
         "GPGPU-Sim PTX: Kernel \'%s\' : regs=%u, lmem=%u, smem=%u, cmem=%u\n",
         get_ptxinfo_kname(), g_ptxinfo.regs, g_ptxinfo.lmem, g_ptxinfo.smem,
@@ -2741,6 +2774,7 @@ void ptxinfo_opencl_addinfo(std::map<std::string, function_info *> &kernels) {
            g_ptxinfo_kname);
     abort();
   } else {
+    if(g_ptx_sim_detail)
     printf(
         "GPGPU-Sim PTX: Kernel \'%s\' : regs=%u, lmem=%u, smem=%u, cmem=%u\n",
         g_ptxinfo_kname, g_ptxinfo.regs, g_ptxinfo.lmem, g_ptxinfo.smem,
@@ -2762,6 +2796,7 @@ struct rec_pts cuda_sim::find_reconvergence_points(function_info *finfo) {
     gpgpu_recon_t *kernel_recon_points =
         (struct gpgpu_recon_t *)calloc(num_recon, sizeof(struct gpgpu_recon_t));
     finfo->get_reconvergence_pairs(kernel_recon_points);
+    if(g_ptx_sim_detail) {
     printf("GPGPU-Sim PTX: reconvergence points for %s...\n",
            finfo->get_name().c_str());
     for (int i = 0; i < num_recon; i++) {
@@ -2775,6 +2810,7 @@ struct rec_pts cuda_sim::find_reconvergence_points(function_info *finfo) {
     }
     printf("GPGPU-Sim PTX: ... end of reconvergence points for %s\n",
            finfo->get_name().c_str());
+    }
 
     tmp.s_kernel_recon_points = kernel_recon_points;
     tmp.s_num_recon = num_recon;

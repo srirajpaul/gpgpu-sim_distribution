@@ -432,6 +432,7 @@ void linear_to_raw_address_translation::init(
   addrdec_getmasklimit(addrdec_mask[BURST], &addrdec_mkhigh[BURST],
                        &addrdec_mklow[BURST]);
 
+  if(g_ptx_sim_detail) {
   printf("addr_dec_mask[CHIP]  = %016llx \thigh:%d low:%d\n",
          addrdec_mask[CHIP], addrdec_mkhigh[CHIP], addrdec_mklow[CHIP]);
   printf("addr_dec_mask[BK]    = %016llx \thigh:%d low:%d\n", addrdec_mask[BK],
@@ -442,6 +443,7 @@ void linear_to_raw_address_translation::init(
          addrdec_mkhigh[COL], addrdec_mklow[COL]);
   printf("addr_dec_mask[BURST] = %016llx \thigh:%d low:%d\n",
          addrdec_mask[BURST], addrdec_mkhigh[BURST], addrdec_mklow[BURST]);
+  }
 
   // create the sub partition ID mask (for removing the sub partition ID from
   // the partition address)
@@ -457,6 +459,7 @@ void linear_to_raw_address_translation::init(
       }
     }
   }
+  if(g_ptx_sim_detail)
   printf("sub_partition_id_mask = %016llx\n", sub_partition_id_mask);
 
   if (run_test) {

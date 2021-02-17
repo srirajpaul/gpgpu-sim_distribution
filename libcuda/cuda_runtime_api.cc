@@ -429,6 +429,7 @@ std::string get_app_binary() {
   self_exe_path[path_length] = '\0';
 #endif
 
+  if(g_ptx_sim_detail)
   printf("self exe links to: %s\n", self_exe_path);
   return self_exe_path;
 }
@@ -449,6 +450,7 @@ char *get_app_binary_name(std::string abs_path) {
   }
 #endif
   self_exe_path = strtok(self_exe_path, ".");
+  if(g_ptx_sim_detail)
   printf("self exe links to: %s\n", self_exe_path);
   return self_exe_path;
 }
@@ -648,6 +650,7 @@ void **cudaRegisterFatBinaryInternal(void *fatCubin,
     // file name associated with each section.
     unsigned long long fat_cubin_handle = next_fat_bin_handle;
     next_fat_bin_handle++;
+    if(g_ptx_sim_detail)
     printf(
         "GPGPU-Sim PTX: __cudaRegisterFatBinary, fat_cubin_handle = %llu, "
         "filename=%s\n",
@@ -687,11 +690,13 @@ void **cudaRegisterFatBinaryInternal(void *fatCubin,
       unsigned capability = 0;
       sscanf(info->ptx[num_ptx_versions].gpuProfileName, "compute_%u",
              &capability);
+      if(g_ptx_sim_detail) {
       printf(
           "GPGPU-Sim PTX: __cudaRegisterFatBinary found PTX versions for "
           "'%s', ",
           info->ident);
       printf("capability = %s\n", info->ptx[num_ptx_versions].gpuProfileName);
+      }
       if (forced_max_capability) {
         if (capability > max_capability &&
             capability <= forced_max_capability) {
@@ -790,6 +795,7 @@ void cudaRegisterVarInternal(
   if (g_debug_execution >= 3) {
     announce_call(__my_func__);
   }
+  if(g_ptx_sim_detail) {
   printf(
       "GPGPU-Sim PTX: __cudaRegisterVar: hostVar = %p; deviceAddress = %s; "
       "deviceName = %s\n",
@@ -798,6 +804,7 @@ void cudaRegisterVarInternal(
       "GPGPU-Sim PTX: __cudaRegisterVar: Registering const memory space of %d "
       "bytes\n",
       size);
+  }
   if (GPGPUSim_Context(ctx)
           ->get_device()
           ->get_gpgpu()
@@ -902,6 +909,7 @@ cudaError_t cudaSetupArgumentInternal(const void *arg, size_t size,
                       "empty launch stack");
   kernel_config &config = ctx->api->g_cuda_launch_stack.back();
   config.set_arg(arg, size, offset);
+  if(g_ptx_sim_detail)
   printf(
       "GPGPU-Sim PTX: Setting up arguments for %zu bytes starting at "
       "0x%llx..\n",
@@ -952,9 +960,11 @@ cudaError_t cudaLaunchInternal(const char *hostFun,
   std::string kname = grid->name();
   function_info *kernel_func_info = grid->entry();
   if (kernel_func_info->is_pdom_set()) {
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: PDOM analysis already done for %s \n",
            kname.c_str());
   } else {
+    if(g_ptx_sim_detail)
     printf("GPGPU-Sim PTX: finding reconvergence points for \'%s\'...\n",
            kname.c_str());
     kernel_func_info->do_pdom();
@@ -1066,6 +1076,7 @@ cudaMallocPitchInternal(void **devPtr, size_t *pitch, size_t width,
     announce_call(__my_func__);
   }
   unsigned malloc_width_inbytes = width;
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaMallocPitch (width = %d)\n", malloc_width_inbytes);
   CUctx_st *context = GPGPUSim_Context(ctx);
   *devPtr = context->get_device()->get_gpgpu()->gpu_malloc(
@@ -1143,6 +1154,7 @@ __host__ cudaError_t CUDARTAPI cudaMallocArrayInternal(
   (*array)->dimensions = 2;
   ((*array)->devPtr32) =
       (int)(long long)context->get_device()->get_gpgpu()->gpu_mallocarray(size);
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaMallocArray: devPtr32 = %d\n",
          ((*array)->devPtr32));
   ((*array)->devPtr) = (void *)(long long)((*array)->devPtr32);
@@ -1219,6 +1231,7 @@ __host__ cudaError_t CUDARTAPI cudaMemcpyToArrayInternal(
   CUctx_st *context = GPGPUSim_Context(ctx);
   gpgpu_t *gpu = context->get_device()->get_gpgpu();
   size_t size = count;
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaMemcpyToArray\n");
   if (kind == cudaMemcpyHostToDevice)
     gpu->memcpy_to_gpu((size_t)(dst->devPtr), src, size);
@@ -1328,6 +1341,7 @@ __host__ cudaError_t CUDARTAPI cudaMemcpyToSymbolInternal(
   }
   // CUctx_st *context = GPGPUSim_Context();
   assert(kind == cudaMemcpyHostToDevice);
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaMemcpyToSymbol: symbol = %p\n", symbol);
   // stream_operation( const char *symbol, const void *src, size_t count, size_t
   // offset )
@@ -1352,6 +1366,7 @@ __host__ cudaError_t CUDARTAPI cudaMemcpyFromSymbolInternal(
   }
   // CUctx_st *context = GPGPUSim_Context();
   assert(kind == cudaMemcpyDeviceToHost);
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaMemcpyFromSymbol: symbol = %p\n", symbol);
   ctx->the_gpgpusim->g_stream_manager->push(
       stream_operation(symbol, dst, count, offset, 0));
@@ -1516,6 +1531,7 @@ cudaError_t cudaGLMapBufferObjectInternal(void **devPtr, GLuint bufferObj,
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, buffer_size, data);
     memcpy_to_gpu((size_t)*devPtr, data, buffer_size);
     free(data);
+    if(g_ptx_sim_detail)
     printf(
         "GPGPU-Sim PTX: cudaGLMapBufferObject %zu bytes starting at 0x%llx..\n",
         (size_t)buffer_size, (unsigned long long)*devPtr);
@@ -1877,6 +1893,7 @@ __host__ cudaError_t CUDARTAPI cudaBindTextureInternal(
   }
   CUctx_st *context = GPGPUSim_Context(ctx);
   gpgpu_t *gpu = context->get_device()->get_gpgpu();
+  if(g_ptx_sim_detail)
   printf(
       "GPGPU-Sim PTX: in cudaBindTexture: sizeof(struct textureReference) = "
       "%zu\n",
@@ -1891,6 +1908,7 @@ __host__ cudaError_t CUDARTAPI cudaBindTextureInternal(
   array->devPtr = (void *)devPtr;
   array->devPtr32 = (int)(long long)devPtr;
   offset = 0;
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX:   size = %zu\n", size);
   printf("GPGPU-Sim PTX:   texref = %p, array = %p\n", texref, array);
   printf("GPGPU-Sim PTX:   devPtr32 = %x\n", array->devPtr32);
@@ -1899,8 +1917,10 @@ __host__ cudaError_t CUDARTAPI cudaBindTextureInternal(
   printf("GPGPU-Sim PTX:   ChannelFormatDesc: x=%d, y=%d, z=%d, w=%d\n",
          desc->x, desc->y, desc->z, desc->w);
   printf("GPGPU-Sim PTX:   Texture Normalized? = %d\n", texref->normalized);
+  }
   gpu->gpgpu_ptx_sim_bindTextureToArray(texref, array);
   devPtr = (void *)(long long)array->devPtr32;
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: devPtr = %p\n", devPtr);
   return g_last_cudaError = cudaSuccess;
 }
@@ -1919,11 +1939,13 @@ __host__ cudaError_t CUDARTAPI cudaBindTextureToArrayInternal(
   }
   CUctx_st *context = GPGPUSim_Context(ctx);
   gpgpu_t *gpu = context->get_device()->get_gpgpu();
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: in cudaBindTextureToArray: %p %p\n", texref, array);
   printf("GPGPU-Sim PTX:   devPtr32 = %x\n", array->devPtr32);
   printf("GPGPU-Sim PTX:   Name corresponding to textureReference: %s\n",
          gpu->gpgpu_ptx_sim_findNamefromTexture(texref));
   printf("GPGPU-Sim PTX:   Texture Normalized? = %d\n", texref->normalized);
+  }
   gpu->gpgpu_ptx_sim_bindTextureToArray(texref, array);
   return g_last_cudaError = cudaSuccess;
 }
@@ -1941,12 +1963,14 @@ __host__ cudaError_t CUDARTAPI cudaUnbindTextureInternal(
   }
   CUctx_st *context = GPGPUSim_Context(ctx);
   gpgpu_t *gpu = context->get_device()->get_gpgpu();
+  if(g_ptx_sim_detail) {
   printf(
       "GPGPU-Sim PTX: in cudaUnbindTexture: sizeof(struct textureReference) = "
       "%zu\n",
       sizeof(struct textureReference));
   printf("GPGPU-Sim PTX:   Name corresponding to textureReference: %s\n",
          gpu->gpgpu_ptx_sim_findNamefromTexture(texref));
+  }
 
   gpu->gpgpu_ptx_sim_unbindTexture(texref);
   return g_last_cudaError = cudaSuccess;
@@ -1990,6 +2014,7 @@ __host__ cudaError_t CUDARTAPI cudaStreamCreateInternal(
   if (g_debug_execution >= 3) {
     announce_call(__my_func__);
   }
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: cudaStreamCreate\n");
 #if (CUDART_VERSION >= 3000)
   *stream = new struct CUstream_st();
@@ -2073,14 +2098,17 @@ void __cudaRegisterTextureInternal(
 #endif
   CUctx_st *context = GPGPUSim_Context(ctx);
   gpgpu_t *gpu = context->get_device()->get_gpgpu();
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: in __cudaRegisterTexture:\n");
   gpu->gpgpu_ptx_sim_bindNameToTexture(devStr.data(), hostVar, dim, norm, ext);
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX:   int dim = %d\n", dim);
   printf("GPGPU-Sim PTX:   int norm = %d\n", norm);
   printf("GPGPU-Sim PTX:   int ext = %d\n", ext);
   printf(
       "GPGPU-Sim PTX:   Execution warning: Not finished implementing \"%s\"\n",
       __my_func__);
+  }
 }
 
 cudaError_t cudaGLUnmapBufferObjectInternal(GLuint bufferObj,
@@ -2875,13 +2903,17 @@ __host__ cudaError_t CUDARTAPI cudaEventSynchronize(cudaEvent_t event) {
   if (g_debug_execution >= 3) {
     announce_call(__my_func__);
   }
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim API: cudaEventSynchronize ** waiting for event\n");
   fflush(stdout);
+  }
   CUevent_st *e = (CUevent_st *)event;
   while (!e->done())
     ;
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim API: cudaEventSynchronize ** event detected\n");
   fflush(stdout);
+  }
   return g_last_cudaError = cudaSuccess;
 }
 
@@ -3018,6 +3050,7 @@ void cuda_runtime_api::extract_ptx_files_using_cuobjdump(CUctx_st *context) {
     while (std::getline(infile, line)) {
       // int pos = line.find(std::string(get_app_binary_name(app_binary)));
       const char *ptx_file = line.c_str();
+      if(g_ptx_sim_detail)
       printf("Extracting specific PTX file named %s \n", ptx_file);
       snprintf(command, 1000, "$CUDA_INSTALL_PATH/bin/cuobjdump -xptx %s %s",
                ptx_file, app_binary.c_str());
@@ -3072,6 +3105,7 @@ void cuda_runtime_api::extract_code_using_cuobjdump() {
   std::string app_binary = get_app_binary();
   // Running cuobjdump using dynamic link to current process
   snprintf(command, 1000, "md5sum %s ", app_binary.c_str());
+  if(g_ptx_sim_detail)
   printf("Running md5sum using \"%s\"\n", command);
   if (system(command)) {
     std::cout << "Failed to execute: " << command << std::endl;
@@ -3488,6 +3522,7 @@ void gpgpu_context::cuobjdumpParseBinary(unsigned int handle) {
     std::set<std::string>::iterator itr_s;
     for (itr_s = itr_m->second.begin(); itr_s != itr_m->second.end(); itr_s++) {
       std::string ptx_filename = *itr_s;
+      if(g_ptx_sim_detail)
       printf("GPGPU-Sim PTX: Parsing %s\n", ptx_filename.c_str());
       symtab = gpgpu_ptx_sim_load_ptx_from_filename(ptx_filename.c_str());
     }
@@ -3503,6 +3538,7 @@ void gpgpu_context::cuobjdumpParseBinary(unsigned int handle) {
     std::set<std::string>::iterator itr_s;
     for (itr_s = itr_m->second.begin(); itr_s != itr_m->second.end(); itr_s++) {
       std::string ptx_filename = *itr_s;
+      if(g_ptx_sim_detail)
       printf("GPGPU-Sim PTX: Loading PTXInfo from %s\n", ptx_filename.c_str());
       gpgpu_ptx_info_load_from_filename(ptx_filename.c_str(), itr_m->first);
     }
@@ -3655,6 +3691,7 @@ void __cudaRegisterShared(void **fatCubinHandle, void **devicePtr) {
     announce_call(__my_func__);
   }
   // we don't do anything here
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: __cudaRegisterShared\n");
 }
 
@@ -3665,6 +3702,7 @@ void CUDARTAPI __cudaRegisterSharedVar(void **fatCubinHandle, void **devicePtr,
     announce_call(__my_func__);
   }
   // we don't do anything here
+  if(g_ptx_sim_detail)
   printf("GPGPU-Sim PTX: __cudaRegisterSharedVar\n");
 }
 
@@ -3958,14 +3996,17 @@ int cuda_runtime_api::load_static_globals(symbol_table *symtab,
   if (g_debug_execution >= 3) {
     announce_call(__my_func__);
   }
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: loading globals with explicit initializers... \n");
   fflush(stdout);
+  }
   int ng_bytes = 0;
   symbol_table::iterator g = symtab->global_iterator_begin();
 
   for (; g != symtab->global_iterator_end(); g++) {
     symbol *global = *g;
     if (global->has_initializer()) {
+      if(g_ptx_sim_detail)
       printf("GPGPU-Sim PTX:     initializing '%s' ... ",
              global->name().c_str());
       unsigned addr = global->get_address();
@@ -3988,12 +4029,15 @@ int cuda_runtime_api::load_static_globals(symbol_table *symtab,
         offset += nbytes;
         ng_bytes += nbytes;
       }
+      if(g_ptx_sim_detail)
       printf(" wrote %u bytes\n", offset);
     }
   }
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: finished loading globals (%u bytes total).\n",
          ng_bytes);
   fflush(stdout);
+  }
   return ng_bytes;
 }
 
@@ -4002,8 +4046,10 @@ int cuda_runtime_api::load_constants(symbol_table *symtab, addr_t min_gaddr,
   if (g_debug_execution >= 3) {
     announce_call(__my_func__);
   }
+  if(g_ptx_sim_detail) {
   printf("GPGPU-Sim PTX: loading constants with explicit initializers... ");
   fflush(stdout);
+  }
   int nc_bytes = 0;
   symbol_table::iterator g = symtab->const_iterator_begin();
 
@@ -4046,8 +4092,10 @@ int cuda_runtime_api::load_constants(symbol_table *symtab, addr_t min_gaddr,
       }
     }
   }
+  if(g_ptx_sim_detail) {
   printf(" done.\n");
   fflush(stdout);
+  }
   return nc_bytes;
 }
 

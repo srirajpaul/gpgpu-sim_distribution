@@ -477,6 +477,7 @@ void InterconnectInterface::_CreateNodeMap(unsigned n_shader, unsigned n_mem, un
   }
 
   //FIXME: should compatible with non-square number
+  if(g_ptx_sim_detail)
   _DisplayMap((int) sqrt(n_node), n_node);
 
 }

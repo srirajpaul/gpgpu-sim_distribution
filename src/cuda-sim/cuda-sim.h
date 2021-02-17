@@ -44,6 +44,7 @@ class symbol_table;
 
 extern const char *g_gpgpusim_version_string;
 extern int g_debug_execution;
+extern int g_ptx_sim_detail;
 
 extern void print_splash();
 

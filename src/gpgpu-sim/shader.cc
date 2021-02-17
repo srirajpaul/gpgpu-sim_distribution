@@ -3232,12 +3232,14 @@ unsigned int shader_core_config::max_cta(const kernel_info_t &k) const {
   if (last_kinfo !=
       kernel_info) {  // Only print out stats if kernel_info struct changes
     last_kinfo = kernel_info;
+    if(g_ptx_sim_detail) {
     printf("GPGPU-Sim uArch: CTA/core = %u, limited by:", result);
     if (result == result_thread) printf(" threads");
     if (result == result_shmem) printf(" shmem");
     if (result == result_regs) printf(" regs");
     if (result == result_cta) printf(" cta_limit");
     printf("\n");
+    }
   }
 
   // gpu_max_cta_per_shader is limited by number of CTAs if not enough to keep

@@ -65,6 +65,7 @@
 class gpgpu_context;
 
 extern tr1_hash_map<new_addr_type, unsigned> address_random_interleaving;
+extern int g_ptx_sim_detail;
 
 enum dram_ctrl_t { DRAM_FIFO = 0, DRAM_FRFCFS = 1 };
 
@@ -193,8 +194,10 @@ class memory_config {
           "0");
 
       option_parser_delimited_string(dram_opp, gpgpu_dram_timing_opt, "=:;");
+      if(g_ptx_sim_detail) {
       fprintf(stdout, "DRAM Timing Options:\n");
       option_parser_print(dram_opp, stdout);
+      }
       option_parser_destroy(dram_opp);
     }
 
@@ -223,6 +226,7 @@ class memory_config {
            "Number of DRAM banks must be a perfect multiple of memory sub "
            "partition");
     m_n_mem_sub_partition = m_n_mem * m_n_sub_partition_per_memory_channel;
+    if(g_ptx_sim_detail)
     fprintf(stdout, "Total number of memory sub partition = %u\n",
             m_n_mem_sub_partition);
 
